@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>برنامه هفتگی کلاس‌ها</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+  :root{
+    --navy:#172b4d; --muted:#64748b; --line:#d9e2ef; --bg:#f4f7fb;
+    --c1:#ffe680; --c2:#c7b1ff; --c3:#ff9c9c; --c4:#ffc27d;
+    --c5:#9bd9a8; --c6:#f3a4ce; --c7:#8ed0f5; --c8:#b9c6ff; --c9:#faff85;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(135deg,#eef4fb,#f9fbff);font-family:"Vazirmatn",Tahoma,sans-serif;color:#172033}
+  .page{max-width:1500px;margin:24px auto;padding:0 18px}
+  .hero{background:linear-gradient(135deg,#19375f,#34577e);color:#fff;border-radius:20px;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px;box-shadow:0 12px 35px #19375f22}
+  .hero h1{margin:0 0 5px;font-size:32px}.hero p{margin:0;color:#dce8f7}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+  .btn{background:#fff;color:var(--navy)} .btn.dark{background:#0f2442;color:#fff;border:1px solid #ffffff33}
+  .hint{margin:12px 2px;color:var(--muted);font-size:13px}
+  .calendar-wrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 25px #1d355710; padding: 15px;}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px;direction:ltr}
+  th,td{border-left:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#edf3fa;padding:12px 8px;text-align:center;font-size:13px;color:#253a59}
+  th:first-child{border-left:0}
+  .day{width:105px;background:#1d3557;color:#fff;font-weight:800;direction:rtl; text-align:center;}
+  .time{min-width:125px}
+  td{height:92px;padding:6px;direction:rtl;background:#fbfdff}
+  .class{border-radius:12px;padding:9px 8px;height:100%;min-height:76px;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:center;font-weight:700;box-shadow:0 3px 10px #172b4d16;cursor:text}
+  .class small{font-weight:500;font-size:11px;opacity:.85}
+  .c1{background:var(--c1)} .c2{background:var(--c2)} .c3{background:var(--c3)} .c4{background:var(--c4)}
+  .c5{background:var(--c5)} .c6{background:var(--c6)} .c7{background:var(--c7)} .c8{background:var(--c8)} .c9{background:var(--c9)}
+  .free{color:#a3afbf;text-align:center;font-size:12px;padding-top:30px}
+  .holiday{background:#f1f4f8;color:#718096;text-align:center;font-weight:800;padding:18px}
+  .section{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 25px #1d355710}
+  .section h2{margin:0 0 14px;font-size:19px;color:var(--navy)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap}
+  .tag{display:flex;align-items:center;gap:7px;font-size:12px;background:#f7f9fc;border:1px solid var(--line);padding:7px 10px;border-radius:10px}
+  .dot{width:13px;height:13px;border-radius:4px}
+  .courses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .course{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fcfdff}
+  .course-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .course strong{font-size:14px}.course .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .address{margin-top:10px;display:flex;gap:8px;align-items:center}
+  .address input{width:100%;font-family:inherit;border:1px solid #ccd7e5;border-radius:9px;padding:9px 10px;outline:none;background:#fff}
+  .address input:focus{border-color:#6b8fb8;box-shadow:0 0 0 3px #6b8fb822}
+  .notes{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+  .editable{border:1px dashed #bdc9d8;border-radius:10px;padding:10px;min-height:50px;outline:none;background:#fafcff}
+  .footer{margin:14px 0 30px;text-align:center;color:#7a8798;font-size:12px}
+  @media(max-width:800px){.hero{align-items:flex-start;flex-direction:column}.hero h1{font-size:25px}.courses,.notes{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff}.page{max-width:none;margin:0;padding:0}.actions,.hint{display:none}
+    .calendar-wrap,.section{box-shadow:none}.hero{box-shadow:none}.course input{border:0}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div>
+      <h1>برنامه هفتگی من</h1>
+      <p>{{ total_courses_persian }} درس • {{ total_units_persian }} واحد • {{ status_text }}</p>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">🖨️ چاپ / PDF</button>
+      <button class="btn dark" onclick="saveData()">💾 خروجی تصویر و ذخیره</button>
+      <button class="btn dark" onclick="resetData()">↺ بازنشانی</button>
+    </div>
+  </header>
+  <div class="hint">همه عنوان‌ها و آدرس‌ها قابل ویرایش‌اند؛ روی متن یا کادر آدرس کلیک کنید و تغییر دهید.</div>
+
+  <div class="calendar-wrap" id="schedule-table">
+  <table>
+    <thead>
+      <tr>
+        <th class="day">روز هفته</th>
+        {% for sh, eh in time_slots %}
+        <th class="time">{{ to_persian('%02d'|format(sh)) }}:۰۰–{{ to_persian('%02d'|format(eh)) }}:۰۰</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for day_row in schedule_grid %}
+      <tr>
+        <td class="day">{{ day_row.name }}</td>
+        {% if day_row.is_holiday %}
+        <td colspan="{{ time_slots|length }}" class="holiday">تعطیل رسمی</td>
+        {% else %}
+          {% for slot in day_row.slots %}
+            {% if slot.course %}
+        <td><div class="class c{{ slot.course.color_index }}" contenteditable="true">{{ slot.course.title }}<br><small>{{ slot.time_display }}<br>{{ slot.location_display }}</small></div></td>
+            {% else %}
+        <td><div class="free">آزاد</div></td>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <section class="section">
+    <h2>🎨 راهنمای رنگ درس‌ها</h2>
+    <div class="legend">
+      {% for course in courses %}
+      <div class="tag"><span class="dot c{{ course.color_index }}"></span>{{ course.title }}</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>📚 مشخصات درس‌ها و آدرس کلاس</h2>
+    <div class="courses">
+      {% for course in courses %}
+      <div class="course">
+        <div class="course-head">
+          <div>
+            <strong>{{ course.code | to_persian }} — {{ course.title }}</strong>
+            <div class="meta">
+              {% if course.group %}گروه {{ course.group | to_persian }} • {% endif %}
+              {{ course.units | int | to_persian }} واحد
+              {% for session in course.sessions %}
+              • {{ session.day.value }} {{ format_time_persian(session.start_time) }}–{{ format_time_persian(session.end_time) }}
+              {% endfor %}
+            </div>
+          </div>
+          <span class="dot c{{ course.color_index }}"></span>
+        </div>
+        <div class="address">📍<input data-key="{{ course.code }}" value="{% if course.sessions and course.sessions[0].location %}{{ course.sessions[0].location }}{% endif %}" placeholder="آدرس کلاس {{ course.title }} را وارد کنید"></div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section notes">
+    <div><h2>📝 یادداشت‌های شخصی</h2><div class="editable" contenteditable="true">اینجا هر نکته‌ای درباره کلاس‌ها، استاد، ساختمان یا برنامه مطالعه بنویس...</div></div>
+    <div><h2>📌 آدرس کلی دانشگاه / دانشکده</h2><div class="editable" contenteditable="true">آدرس کلی را اینجا وارد کنید...</div></div>
+  </section>
+  <div class="footer">برنامه‌ریزی، قدم اول موفقیت است ✨</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function saveData(){
+  const data={inputs:{}, edits:[]};
+  document.querySelectorAll("input[data-key]").forEach(i=>data.inputs[i.dataset.key]=i.value);
+  document.querySelectorAll("[contenteditable=true]").forEach((e,i)=>data.edits[i]=e.innerHTML);
+  localStorage.setItem("weeklySchedule",JSON.stringify(data));
+
+  const scheduleElement = document.getElementById("schedule-table");
+  html2canvas(scheduleElement, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true
+  }).then(canvas => {
+    const imgData = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = imgData;
+    link.download = "برنامه_هفتگی.png";
+    link.click();
+    alert("تغییرات شما ذخیره شد و عکس برنامه دانلود شد ✅");
+  }).catch(err => {
+    console.error(err);
+    alert("تغییرات ذخیره شد اما در ایجاد تصویر مشکلی پیش آمد.");
+  });
+}
+function loadData(){
+  const raw=localStorage.getItem("weeklySchedule"); if(!raw)return;
+  const d=JSON.parse(raw);
+  document.querySelectorAll("input[data-key]").forEach(i=>{if(d.inputs?.[i.dataset.key]!==undefined)i.value=d.inputs[i.dataset.key]});
+  document.querySelectorAll("[contenteditable=true]").forEach((e,i)=>{if(d.edits?.[i]!==undefined)e.innerHTML=d.edits[i]});
+}
+function resetData(){if(confirm("همه تغییرات ذخیره‌شده پاک شود؟")){localStorage.removeItem("weeklySchedule");location.reload()}}
+loadData();
+</script>
+</body>
+</html>

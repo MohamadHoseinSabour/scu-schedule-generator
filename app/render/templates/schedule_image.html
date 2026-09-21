@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+  :root{
+    --navy:#172b4d; --muted:#64748b; --line:#d9e2ef; --bg:#f4f7fb;
+    --c1:#ffe680; --c2:#c7b1ff; --c3:#ff9c9c; --c4:#ffc27d;
+    --c5:#9bd9a8; --c6:#f3a4ce; --c7:#8ed0f5; --c8:#b9c6ff; --c9:#faff85;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#fff;font-family:"Vazirmatn",Tahoma,sans-serif;color:#172033}
+  #schedule-table{width:1800px;padding:20px;background:#fff}
+  .header{background:linear-gradient(135deg,#19375f,#34577e);color:#fff;border-radius:16px;padding:18px 24px;margin-bottom:16px}
+  .header h1{font-size:28px;margin-bottom:4px}
+  .header p{color:#dce8f7;font-size:14px}
+  table{border-collapse:separate;border-spacing:0;width:100%;direction:ltr}
+  th,td{border-left:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#edf3fa;padding:12px 8px;text-align:center;font-size:13px;color:#253a59}
+  th:first-child{border-left:0}
+  .day{width:105px;background:#1d3557;color:#fff;font-weight:800;direction:rtl;text-align:center}
+  .time{min-width:125px}
+  td{height:92px;padding:6px;direction:rtl;background:#fbfdff}
+  .class{border-radius:12px;padding:9px 8px;height:100%;min-height:76px;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:center;font-weight:700;box-shadow:0 3px 10px #172b4d16}
+  .class small{font-weight:500;font-size:11px;opacity:.85}
+  .c1{background:var(--c1)} .c2{background:var(--c2)} .c3{background:var(--c3)} .c4{background:var(--c4)}
+  .c5{background:var(--c5)} .c6{background:var(--c6)} .c7{background:var(--c7)} .c8{background:var(--c8)} .c9{background:var(--c9)}
+  .brand{text-align:center;color:#7a8798;font-size:11px;margin-top:12px;padding:6px 0}
+</style>
+</head>
+<body>
+<div id="schedule-table">
+  <div class="header">
+    <h1>برنامه هفتگی من</h1>
+    <p>{{ total_courses_persian }} درس • {{ total_units_persian }} واحد • {{ status_text }}</p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th class="day">روز هفته</th>
+        {% for sh, eh in time_slots %}
+        <th class="time">{{ to_persian('%02d'|format(sh)) }}:۰۰–{{ to_persian('%02d'|format(eh)) }}:۰۰</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for day_row in schedule_grid %}
+      <tr>
+        <td class="day">{{ day_row.name }}</td>
+        {% for slot in day_row.slots %}
+          {% if slot.course %}
+        <td><div class="class c{{ slot.course.color_index }}">{{ slot.course.title }}<br><small>{{ slot.time_display }}<br>{{ slot.location_display }}</small></div></td>
+          {% else %}
+        <td></td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="brand">ساخته‌شده با @{{ bot_username }} 🤖</div>
+</div>
+</body>
+</html>

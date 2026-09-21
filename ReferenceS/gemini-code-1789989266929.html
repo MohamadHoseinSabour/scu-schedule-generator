@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>برنامه هفتگی کلاس‌ها</title>
+<!-- اضافه شدن کتابخانه برای گرفتن عکس از برنامه -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+  :root{
+    --navy:#172b4d; --muted:#64748b; --line:#d9e2ef; --bg:#f4f7fb;
+    --c1:#ffe680; --c2:#c7b1ff; --c3:#ff9c9c; --c4:#ffc27d;
+    --c5:#9bd9a8; --c6:#f3a4ce; --c7:#8ed0f5; --c8:#b9c6ff; --c9:#faff85;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(135deg,#eef4fb,#f9fbff);font-family:"Vazirmatn",Tahoma,sans-serif;color:#172033}
+  .page{max-width:1500px;margin:24px auto;padding:0 18px}
+  .hero{background:linear-gradient(135deg,#19375f,#34577e);color:#fff;border-radius:20px;padding:22px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px;box-shadow:0 12px 35px #19375f22}
+  .hero h1{margin:0 0 5px;font-size:32px}.hero p{margin:0;color:#dce8f7}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+  .btn{background:#fff;color:var(--navy)} .btn.dark{background:#0f2442;color:#fff;border:1px solid #ffffff33}
+  .hint{margin:12px 2px;color:var(--muted);font-size:13px}
+  .calendar-wrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 25px #1d355710; padding: 15px;}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1080px;direction:ltr}
+  th,td{border-left:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:#edf3fa;padding:12px 8px;text-align:center;font-size:13px;color:#253a59}
+  th:first-child{border-left:0}
+  .day{width:105px;background:#1d3557;color:#fff;font-weight:800;direction:rtl; text-align:center;}
+  .time{min-width:125px}
+  td{height:92px;padding:6px;direction:rtl;background:#fbfdff}
+  .class{border-radius:12px;padding:9px 8px;height:100%;min-height:76px;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:center;font-weight:700;box-shadow:0 3px 10px #172b4d16;cursor:text}
+  .class small{font-weight:500;font-size:11px;opacity:.85}
+  .c1{background:var(--c1)} .c2{background:var(--c2)} .c3{background:var(--c3)} .c4{background:var(--c4)}
+  .c5{background:var(--c5)} .c6{background:var(--c6)} .c7{background:var(--c7)} .c8{background:var(--c8)} .c9{background:var(--c9)}
+  .free{color:#a3afbf;text-align:center;font-size:12px;padding-top:30px}
+  .holiday{background:#f1f4f8;color:#718096;text-align:center;font-weight:800;padding:18px}
+  .section{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 8px 25px #1d355710}
+  .section h2{margin:0 0 14px;font-size:19px;color:var(--navy)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap}
+  .tag{display:flex;align-items:center;gap:7px;font-size:12px;background:#f7f9fc;border:1px solid var(--line);padding:7px 10px;border-radius:10px}
+  .dot{width:13px;height:13px;border-radius:4px}
+  .courses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .course{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fcfdff}
+  .course-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .course strong{font-size:14px}.course .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .address{margin-top:10px;display:flex;gap:8px;align-items:center}
+  .address input{width:100%;font-family:inherit;border:1px solid #ccd7e5;border-radius:9px;padding:9px 10px;outline:none;background:#fff}
+  .address input:focus{border-color:#6b8fb8;box-shadow:0 0 0 3px #6b8fb822}
+  .notes{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+  .editable{border:1px dashed #bdc9d8;border-radius:10px;padding:10px;min-height:50px;outline:none;background:#fafcff}
+  .footer{margin:14px 0 30px;text-align:center;color:#7a8798;font-size:12px}
+  @media(max-width:800px){.hero{align-items:flex-start;flex-direction:column}.hero h1{font-size:25px}.courses,.notes{grid-template-columns:1fr}}
+  @media print{
+    body{background:#fff}.page{max-width:none;margin:0;padding:0}.actions,.hint{display:none}
+    .calendar-wrap,.section{box-shadow:none}.hero{box-shadow:none}.course input{border:0}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <div>
+      <h1>برنامه هفتگی من</h1>
+      <p>۹ درس • ۲۰ واحد • برنامه بدون تداخل</p>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="window.print()">🖨️ چاپ / PDF</button>
+      <button class="btn dark" onclick="saveData()">💾 خروجی تصویر و ذخیره</button>
+      <button class="btn dark" onclick="resetData()">↺ بازنشانی</button>
+    </div>
+  </header>
+  <div class="hint">همه عنوان‌ها و آدرس‌ها قابل ویرایش‌اند؛ روی متن یا کادر آدرس کلیک کنید و تغییر دهید.</div>
+
+  <div class="calendar-wrap" id="schedule-table">
+  <table>
+    <thead>
+      <tr>
+        <th class="day">روز هفته</th>
+        <th class="time">۰۸:۰۰–۱۰:۰۰</th>
+        <th class="time">۱۰:۰۰–۱۲:۰۰</th>
+        <th class="time">۱۲:۰۰–۱۴:۰۰</th>
+        <th class="time">۱۴:۰۰–۱۶:۰۰</th>
+        <th class="time">۱۶:۰۰–۱۸:۰۰</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="day">شنبه</td>
+        <td colspan="4"><div class="free">آزاد</div></td>
+        <td><div class="class c6" contenteditable="true">مباحث ویژه<br><small>ابزار دقیق پزشکی • ۱۶:۰۰–۱۸:۰۰<br>سمعی بصری برق</small></div></td>
+      </tr>
+      <tr>
+        <td class="day">یکشنبه</td>
+        <td><div class="class c1" contenteditable="true">مدارهای منطقی<br><small>۰۸:۰۰–۰۹:۳۰<br>کلاس ۲۱۸</small></div></td>
+        <td><div class="class c7" contenteditable="true">پردازش سیگنال‌های دیجیتال<br><small>DSP • ۱۱:۰۰–۱۲:۰۰<br>کلاس ۲۱۹</small></div></td>
+        <td><div class="free">استراحت / ناهار</div></td>
+        <td><div class="class c2" contenteditable="true">الکترونیک ۲<br><small>۱۴:۰۰–۱۵:۳۰<br>کلاس ۲۱۹</small></div></td>
+        <td><div class="class c9" contenteditable="true">مبانی تحقیق در عملیات<br><small>۱۶:۰۰–۱۷:۳۰<br>کلاس ۲۱۱</small></div></td>
+      </tr>
+      <tr>
+        <td class="day">دوشنبه</td>
+        <td><div class="free">آزاد</div></td>
+        <td><div class="free">آزاد</div></td>
+        <td><div class="class c5" contenteditable="true">آزمایشگاه مدارهای منطقی<br><small>۱۳:۰۰–۱۵:۰۰<br>دانشکده مهندسی</small></div></td>
+        <td><div class="free">استراحت</div></td>
+        <td><div class="class c6" contenteditable="true">مباحث ویژه<br><small>ابزار دقیق پزشکی • ۱۶:۰۰–۱۷:۰۰<br>کلاس ۲۱۸</small></div></td>
+      </tr>
+      <tr>
+        <td class="day">سه‌شنبه</td>
+        <td><div class="class c4" contenteditable="true">آزمایشگاه ماشین‌های الکتریکی ۱<br><small>۰۸:۰۰–۱۰:۰۰<br>دانشکده مهندسی</small></div></td>
+        <td><div class="class c7" contenteditable="true">پردازش سیگنال‌های دیجیتال<br><small>DSP • ۱۰:۰۰–۱۲:۰۰<br>کلاس ۲۱۹</small></div></td>
+        <td><div class="free">استراحت / ناهار</div></td>
+        <td><div class="class c2" contenteditable="true">الکترونیک ۲<br><small>۱۴:۰۰–۱۵:۳۰<br>کلاس ۲۱۹</small></div></td>
+        <td><div class="class c9" contenteditable="true">مبانی تحقیق در عملیات<br><small>۱۶:۰۰–۱۷:۳۰<br>کلاس ۲۱۱</small></div></td>
+      </tr>
+      <tr>
+        <td class="day">چهارشنبه</td>
+        <td><div class="free">آزاد</div></td>
+        <td><div class="class c1" contenteditable="true">مدارهای منطقی<br><small>۱۰:۰۰–۱۱:۳۰<br>کلاس ۲۱۸</small></div></td>
+        <td><div class="free">استراحت / ناهار</div></td>
+        <td><div class="class c3" contenteditable="true">ماشین‌های الکتریکی ۲<br><small>۱۴:۰۰–۱۶:۰۰<br>کلاس ۲۱۴</small></div></td>
+        <td><div class="class c8" contenteditable="true">آز پردازش سیگنال‌های دیجیتال<br><small>۱۶:۰۰–۱۸:۰۰<br>دانشکده مهندسی</small></div></td>
+      </tr>
+      <tr><td class="day">پنجشنبه</td><td colspan="5" class="holiday">تعطیل رسمی</td></tr>
+      <tr><td class="day">جمعه</td><td colspan="5" class="holiday">تعطیل رسمی</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <section class="section">
+    <h2>🎨 راهنمای رنگ درس‌ها</h2>
+    <div class="legend">
+      <div class="tag"><span class="dot c1"></span>مدارهای منطقی</div>
+      <div class="tag"><span class="dot c2"></span>الکترونیک ۲</div>
+      <div class="tag"><span class="dot c3"></span>ماشین‌های الکتریکی ۲</div>
+      <div class="tag"><span class="dot c4"></span>آز ماشین‌های الکتریکی ۱</div>
+      <div class="tag"><span class="dot c5"></span>آزمایشگاه مدارهای منطقی</div>
+      <div class="tag"><span class="dot c6"></span>مباحث ویژه — ابزار دقیق پزشکی</div>
+      <div class="tag"><span class="dot c7"></span>پردازش سیگنال‌های دیجیتال (DSP)</div>
+      <div class="tag"><span class="dot c8"></span>آز پردازش سیگنال‌های دیجیتال</div>
+      <div class="tag"><span class="dot c9"></span>مبانی تحقیق در عملیات</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>📚 مشخصات درس‌ها و آدرس کلاس</h2>
+    <div class="courses">
+      <div class="course"><div class="course-head"><div><strong>۴۱۲۱۳۲ — الکترونیک ۲</strong><div class="meta">گروه ۲ • ۳ واحد • یکشنبه و سه‌شنبه ۱۴:۰۰–۱۵:۳۰</div></div><span class="dot c2"></span></div><div class="address">📍<input data-key="412132" value="دانشکده مهندسی - کلاس ۲۱۹" placeholder="آدرس کلاس الکترونیک ۲ را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۲۲۱۱۵ — ماشین‌های الکتریکی ۲</strong><div class="meta">گروه ۱ • ۲ واحد • چهارشنبه ۱۴:۰۰–۱۶:۰۰</div></div><span class="dot c3"></span></div><div class="address">📍<input data-key="422115" value="دانشکده مهندسی - کلاس ۲۱۴" placeholder="آدرس کلاس ماشین‌های الکتریکی ۲ را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۱۲۱۳۸ — مدارهای منطقی</strong><div class="meta">گروه ۲ • ۳ واحد • یکشنبه ۰۸:۰۰–۰۹:۳۰ / چهارشنبه ۱۰:۰۰–۱۱:۳۰</div></div><span class="dot c1"></span></div><div class="address">📍<input data-key="412138" value="دانشکده مهندسی - کلاس ۲۱۸" placeholder="آدرس کلاس مدارهای منطقی را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۲۲۱۲۴ — آز ماشین‌های الکتریکی ۱</strong><div class="meta">گروه ۲ • ۱ واحد • سه‌شنبه ۰۸:۰۰–۱۰:۰۰</div></div><span class="dot c4"></span></div><div class="address">📍<input data-key="422124" value="دانشکده مهندسی" placeholder="آدرس آزمایشگاه ماشین‌های الکتریکی ۱"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۶۵۵۲۱۰ — آزمایشگاه مدارهای منطقی</strong><div class="meta">گروه ۲ • ۱ واحد • دوشنبه ۱۳:۰۰–۱۵:۰۰</div></div><span class="dot c5"></span></div><div class="address">📍<input data-key="655210" value="دانشکده مهندسی" placeholder="آدرس آزمایشگاه مدارهای منطقی را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۱۲۳۶۳ — مباحث ویژه (ابزار دقیق پزشکی)</strong><div class="meta">گروه ۱ • ۳ واحد • شنبه ۱۶:۰۰–۱۸:۰۰ / دوشنبه ۱۶:۰۰–۱۷:۰۰</div></div><span class="dot c6"></span></div><div class="address">📍<input data-key="412363" value="سمعی بصری برق / کلاس ۲۱۸" placeholder="آدرس کلاس مباحث ویژه را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۲۲۱۱۶ — پردازش سیگنال‌های دیجیتال (DSP)</strong><div class="meta">گروه ۱ • ۳ واحد • یکشنبه ۱۱:۰۰–۱۲:۰۰ / سه‌شنبه ۱۰:۰۰–۱۲:۰۰</div></div><span class="dot c7"></span></div><div class="address">📍<input data-key="422116" value="دانشکده مهندسی - کلاس ۲۱۹" placeholder="آدرس کلاس DSP را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۲۲۱۷۹ — آز پردازش سیگنال‌های دیجیتال</strong><div class="meta">گروه ۱ • ۱ واحد • چهارشنبه ۱۶:۰۰–۱۸:۰۰</div></div><span class="dot c8"></span></div><div class="address">📍<input data-key="422179" value="دانشکده مهندسی" placeholder="زمان و آدرس آز DSP را وارد کنید"></div></div>
+      <div class="course"><div class="course-head"><div><strong>۴۲۲۱۶۳ — مبانی تحقیق در عملیات</strong><div class="meta">گروه ۱ • ۳ واحد • یکشنبه و سه‌شنبه ۱۶:۰۰–۱۷:۳۰</div></div><span class="dot c9"></span></div><div class="address">📍<input data-key="422163" value="دانشکده مهندسی - کلاس ۲۱۱" placeholder="آدرس کلاس تحقیق در عملیات را وارد کنید"></div></div>
+    </div>
+  </section>
+
+  <section class="section notes">
+    <div><h2>📝 یادداشت‌های شخصی</h2><div class="editable" contenteditable="true">اینجا هر نکته‌ای درباره کلاس‌ها، استاد، ساختمان یا برنامه مطالعه بنویس...</div></div>
+    <div><h2>📌 آدرس کلی دانشگاه / دانشکده</h2><div class="editable" contenteditable="true">آدرس کلی را اینجا وارد کنید...</div></div>
+  </section>
+  <div class="footer">برنامه‌ریزی، قدم اول موفقیت است ✨</div>
+</div>
+<script>
+function saveData(){
+  // ابتدا اطلاعات و نوشته‌های شما ذخیره می‌شود
+  const data={inputs:{}, edits:[]};
+  document.querySelectorAll("input[data-key]").forEach(i=>data.inputs[i.dataset.key]=i.value);
+  document.querySelectorAll("[contenteditable=true]").forEach((e,i)=>data.edits[i]=e.innerHTML);
+  localStorage.setItem("weeklySchedule",JSON.stringify(data));
+  
+  // تولید تصویر از برنامه هفتگی
+  const scheduleElement = document.getElementById("schedule-table");
+  
+  html2canvas(scheduleElement, {
+    scale: 2, // برای کیفیت بالاتر تصویر
+    backgroundColor: "#ffffff",
+    useCORS: true
+  }).then(canvas => {
+    // ایجاد تصویر و دانلود
+    const imgData = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = imgData;
+    link.download = "برنامه_هفتگی.png";
+    link.click();
+    
+    alert("تغییرات شما ذخیره شد و عکس برنامه دانلود شد ✅");
+  }).catch(err => {
+    console.error(err);
+    alert("تغییرات ذخیره شد اما در ایجاد تصویر مشکلی پیش آمد.");
+  });
+}
+function loadData(){
+  const raw=localStorage.getItem("weeklySchedule"); if(!raw)return;
+  const d=JSON.parse(raw);
+  document.querySelectorAll("input[data-key]").forEach(i=>{if(d.inputs?.[i.dataset.key]!==undefined)i.value=d.inputs[i.dataset.key]});
+  document.querySelectorAll("[contenteditable=true]").forEach((e,i)=>{if(d.edits?.[i]!==undefined)e.innerHTML=d.edits[i]});
+}
+function resetData(){if(confirm("همه تغییرات ذخیره‌شده پاک شود؟")){localStorage.removeItem("weeklySchedule");location.reload()}}
+loadData();
+</script>
+</body>
+</html>
