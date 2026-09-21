@@ -18,7 +18,14 @@ router = Router()
 def is_admin(user_id: int) -> bool:
     """Check if given Telegram user ID is an authorized admin."""
     settings = get_settings()
-    return user_id in settings.ADMIN_TELEGRAM_IDS
+    is_auth = user_id in settings.ADMIN_TELEGRAM_IDS
+    if not is_auth:
+        logger.warning(
+            "Access denied: user_id=%s is not in ADMIN_TELEGRAM_IDS=%s",
+            user_id,
+            settings.ADMIN_TELEGRAM_IDS,
+        )
+    return is_auth
 
 
 @router.message(Command("admin"))
@@ -27,6 +34,11 @@ async def admin_cmd(message: Message) -> None:
     user = message.from_user
     user_id = user.id if user else 0
     if not is_admin(user_id):
+        await message.answer(
+            f"⛔ <b>دسترسی غیرمجاز!</b>\n\n"
+            f"شناسه تلگرام شما: <code>{user_id}</code>\n"
+            f"این شناسه در لیست ادمین‌ها ثبت نشده است."
+        )
         return
 
     dashboard_url = f"http://localhost:8000/admin?admin_id={user_id}"
@@ -50,6 +62,11 @@ async def stats_cmd(message: Message) -> None:
     user = message.from_user
     user_id = user.id if user else 0
     if not is_admin(user_id):
+        await message.answer(
+            f"⛔ <b>دسترسی غیرمجاز!</b>\n\n"
+            f"شناسه تلگرام شما: <code>{user_id}</code>\n"
+            f"این شناسه در لیست ادمین‌ها ثبت نشده است."
+        )
         return
 
     session_factory = get_session_factory()
@@ -81,6 +98,11 @@ async def health_cmd(message: Message) -> None:
     user = message.from_user
     user_id = user.id if user else 0
     if not is_admin(user_id):
+        await message.answer(
+            f"⛔ <b>دسترسی غیرمجاز!</b>\n\n"
+            f"شناسه تلگرام شما: <code>{user_id}</code>\n"
+            f"این شناسه در لیست ادمین‌ها ثبت نشده است."
+        )
         return
 
     text = (

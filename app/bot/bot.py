@@ -21,10 +21,11 @@ def create_dispatcher() -> Dispatcher:
 
     from app.bot.handlers import admin, callbacks, phase2, start, upload
 
+    # Include admin router early so admin commands take precedence
     dp.include_router(start.router)
+    dp.include_router(admin.router)
     dp.include_router(upload.router)
     dp.include_router(callbacks.router)
     dp.include_router(phase2.router)
-    dp.include_router(admin.router)
 
     return dp

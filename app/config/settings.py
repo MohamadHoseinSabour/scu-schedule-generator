@@ -42,9 +42,15 @@ class Settings(BaseSettings):
     @field_validator("ADMIN_TELEGRAM_IDS", mode="before")
     @classmethod
     def parse_admin_ids(cls, value: Any) -> list[int]:
-        """Normalize ADMIN_TELEGRAM_IDS from comma-separated string or list."""
+        """Normalize ADMIN_TELEGRAM_IDS from int, comma-separated string, or list."""
+        if value is None or value == "":
+            return []
+        if isinstance(value, (int, float)):
+            return [int(value)]
         if isinstance(value, str):
             value = value.strip()
+            if value.startswith("[") and value.endswith("]"):
+                value = value[1:-1].strip()
             if not value:
                 return []
             return [int(item.strip()) for item in value.split(",") if item.strip()]
