@@ -29,7 +29,15 @@ class ImageRenderer:
             from playwright.async_api import async_playwright
 
             self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch(headless=True)
+            self._browser = await self._playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
+            )
             logger.info("Playwright Chromium browser started successfully")
         except Exception:
             logger.exception("Failed to start Playwright browser")

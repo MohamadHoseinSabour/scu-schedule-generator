@@ -27,6 +27,33 @@ def test_settings_admin_ids_parser():
     assert empty_settings.ADMIN_TELEGRAM_IDS == []
 
 
+def test_settings_port_and_database_url_normalization():
+    """Verify Railway port and PostgreSQL URL normalization."""
+    # Default port
+    settings = Settings()
+    assert settings.PORT == 8000
+
+    # Railway standard postgres:// URL
+    railway_url_1 = "postgres://postgres:secret123@roundhouse.proxy.rlwy.net:54321/railway"
+    s1 = Settings(DATABASE_URL=railway_url_1)
+    assert s1.DATABASE_URL == "postgresql+asyncpg://postgres:secret123@roundhouse.proxy.rlwy.net:54321/railway"
+
+    # Railway postgresql:// URL without async driver
+    railway_url_2 = "postgresql://postgres:secret123@postgres.railway.internal:5432/railway"
+    s2 = Settings(DATABASE_URL=railway_url_2)
+    assert s2.DATABASE_URL == "postgresql+asyncpg://postgres:secret123@postgres.railway.internal:5432/railway"
+
+    # Already asyncpg URL
+    asyncpg_url = "postgresql+asyncpg://user:pass@localhost:5432/db"
+    s3 = Settings(DATABASE_URL=asyncpg_url)
+    assert s3.DATABASE_URL == asyncpg_url
+
+    # SQLite URL untouched
+    sqlite_url = "sqlite+aiosqlite:///./storage/custom.db"
+    s4 = Settings(DATABASE_URL=sqlite_url)
+    assert s4.DATABASE_URL == sqlite_url
+
+
 def test_feature_flags_defaults():
     """Verify default feature flag values."""
     flags = FeatureFlags()

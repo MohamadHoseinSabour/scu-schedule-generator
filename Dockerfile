@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 WORKDIR /app
 
@@ -42,5 +43,7 @@ COPY . .
 
 # Create persistent storage directories
 RUN mkdir -p storage/uploads storage/outputs storage/temp
+
+EXPOSE 8000
 
 CMD ["python", "-m", "app.main"]

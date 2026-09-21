@@ -45,7 +45,7 @@ services:
         condition: service_healthy
     volumes:
       - storage_data:/app/storage
-    command: ["python", "-m", "app.main"]
+    command: ["python", "-m", "app.main", "--bot-only"]
 
   api:
     build: .

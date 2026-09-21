@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     BOT_USERNAME: str = ""
     ADMIN_TELEGRAM_IDS: list[int] = []
 
+    # Server & Port
+    PORT: int = 8000
+
     # Database & Storage
     DATABASE_URL: str = "sqlite+aiosqlite:///./storage/scu_schedule.db"
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -57,6 +60,19 @@ class Settings(BaseSettings):
         if isinstance(value, (list, tuple, set)):
             return [int(item) for item in value]
         return []
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: Any) -> str:
+        """Normalize DATABASE_URL for SQLAlchemy async (e.g. Railway PostgreSQL URLs)."""
+        if not value or not isinstance(value, str):
+            return "sqlite+aiosqlite:///./storage/scu_schedule.db"
+        val = value.strip()
+        if val.startswith("postgres://"):
+            val = "postgresql+asyncpg://" + val[len("postgres://"):]
+        elif val.startswith("postgresql://") and not val.startswith("postgresql+asyncpg://"):
+            val = "postgresql+asyncpg://" + val[len("postgresql://"):]
+        return val
 
     @property
     def is_production(self) -> bool:

@@ -18,6 +18,26 @@ async def test_admin_health_endpoint():
 
 
 @pytest.mark.asyncio
+async def test_root_health_and_landing():
+    """Verify Railway root health check and landing page endpoints."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Test Railway health probe
+        health_resp = await client.get("/health")
+        assert health_resp.status_code == 200
+        health_data = health_resp.json()
+        assert health_data["status"] == "ONLINE"
+        assert "bot" in health_data
+        assert "database" in health_data
+
+        # Test root landing page
+        index_resp = await client.get("/")
+        assert index_resp.status_code == 200
+        assert "SCU Schedule Generator" in index_resp.text
+        assert "Railway" in index_resp.text
+
+
+@pytest.mark.asyncio
 async def test_admin_stats_unauthorized():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

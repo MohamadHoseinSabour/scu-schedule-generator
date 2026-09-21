@@ -115,6 +115,27 @@ uvicorn app.admin.routes:app --reload --port 8000
 
 ---
 
+## 🚂 استقرار خودکار روی Railway (Deploy on Railway)
+
+پروژه به صورت کامل برای استقرار خودکار و با ۱ کلیک روی [Railway.com](https://railway.com) بهینه‌سازی شده است:
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/new)
+
+### گام‌های استقرار در Railway:
+1. در پنل **[Railway.com](https://railway.com)** یک پروژه جدید بسازید و ریپازیتوری گیت‌هاب خود را انتخاب کنید (**Deploy from GitHub repo**).
+2. ریلوِی به طور خودکار فایل `railway.json` و `Dockerfile` را شناسایی کرده و ایمیج را بیلد می‌کند.
+3. در تب **Variables** متغیرهای زیر را وارد کنید:
+   - `BOT_TOKEN`: توکن دریافتی از BotFather تلگرام (الزامی)
+   - `BOT_USERNAME`: یوزرنیم ربات (اختیاری، برای تولید دکمه‌های اشتراک)
+   - `ADMIN_TELEGRAM_IDS`: شناسه عددی ادمین‌های تلگرام برای دسترسی به پنل
+   - `APP_ENV`: مقدار `production`
+4. **(توصیه شده) ماندگاری داده‌ها (Persistent Volume):**
+   - در تب **Settings** سرویس، به بخش **Volumes** بروید و یک Volume جدید اضافه کرده و Mount Path آن را برابر `/app/storage` قرار دهید تا فایل‌های خروجی و پایگاه داده در ری‌استارت‌ها حفظ شوند.
+5. **(اختیاری) اتصال دیتابیس PostgreSQL:**
+   - اگر در Railway یک سرویس PostgreSQL اضافه کنید، متغیر `DATABASE_URL` به صورت خودکار به درایور ناهمگام (`postgresql+asyncpg://`) متصل شده و نیاز به هیچ تنظیم دستی ندارد!
+
+---
+
 ## 🐳 استقرار با داکر (Docker Compose)
 
 کل بسته شامل ربات تلگرام، وب‌سرویس ادمین، ورکر Celery، دیتابیس PostgreSQL و کش Redis با یک فرمان قابل راه‌اندازی است:
