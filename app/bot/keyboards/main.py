@@ -32,6 +32,7 @@ def main_keyboard() -> ReplyKeyboardMarkup:
 def result_inline_keyboard(
     bot_username: str,
     referral_code: str = "",
+    html_stem: str = "",
 ) -> InlineKeyboardMarkup:
     """Inline keyboard shown under the result photo."""
     ref_param = f"?start=ref_{referral_code}" if referral_code else ""
@@ -42,11 +43,15 @@ def result_inline_keyboard(
         f"&text={quote(SHARE_TEXT)}"
     )
 
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="📤 ارسال به دوستان", url=share_url),
-                InlineKeyboardButton(text="🔄 ساخت مجدد", callback_data="rebuild"),
-            ]
-        ]
-    )
+    rows: list[list[InlineKeyboardButton]] = []
+    if html_stem:
+        rows.append([
+            InlineKeyboardButton(text="📥 دریافت فایل تعاملی (HTML)", callback_data=f"get_html:{html_stem}")
+        ])
+
+    rows.append([
+        InlineKeyboardButton(text="📤 ارسال به دوستان", url=share_url),
+        InlineKeyboardButton(text="🔄 ساخت مجدد", callback_data="rebuild"),
+    ])
+
+    return InlineKeyboardMarkup(inline_keyboard=rows)

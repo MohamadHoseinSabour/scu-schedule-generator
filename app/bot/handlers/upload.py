@@ -107,26 +107,20 @@ async def handle_document(message: Message) -> None:
         # 8. Send outputs
         await progress_msg.edit_text(PROCESSING_DONE)
 
-        # Send HTML document
-        if result.html_path and result.html_path.exists():
-            html_bytes = result.html_path.read_bytes()
-            await message.answer_document(
-                BufferedInputFile(html_bytes, filename="barname_haftegi.html"),
-                caption="🌐 <b>نسخه کامل و تعاملی برنامه هفتگی (HTML)</b>\n<i>این فایل رو می‌تونی با هر مرورگری توی گوشی یا کامپیوتر باز کنی.</i>",
-            )
+        html_stem = result.html_path.stem if result.html_path and result.html_path.exists() else ""
 
-        # Send Image photo
+        # Send Image photo (or summary text fallback)
         if result.image_path and result.image_path.exists():
             img_bytes = result.image_path.read_bytes()
             await message.answer_photo(
                 BufferedInputFile(img_bytes, filename="barname_haftegi.png"),
                 caption=summary,
-                reply_markup=result_inline_keyboard(bot_username),
+                reply_markup=result_inline_keyboard(bot_username, html_stem=html_stem),
             )
         else:
             await message.answer(
                 summary,
-                reply_markup=result_inline_keyboard(bot_username),
+                reply_markup=result_inline_keyboard(bot_username, html_stem=html_stem),
             )
 
         # 9. Send fun completion note
