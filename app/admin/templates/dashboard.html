@@ -88,10 +88,10 @@
         <p style="opacity: 0.8; font-size: 14px; margin-top: 4px;">آمار و شاخص‌های کلیدی سیستم</p>
       </div>
       <div class="filters">
-        <a href="/admin" class="filter-btn {% if not selected_days %}active{% endif %}">همه</a>
-        <a href="/admin?days=30" class="filter-btn {% if selected_days == 30 %}active{% endif %}">۳۰ روز</a>
-        <a href="/admin?days=7" class="filter-btn {% if selected_days == 7 %}active{% endif %}">۷ روز</a>
-        <a href="/admin?days=1" class="filter-btn {% if selected_days == 1 %}active{% endif %}">امروز</a>
+        <a href="/admin?admin_id={{ admin_id }}" class="filter-btn {% if not selected_days %}active{% endif %}">همه</a>
+        <a href="/admin?admin_id={{ admin_id }}&days=30" class="filter-btn {% if selected_days == 30 %}active{% endif %}">۳۰ روز</a>
+        <a href="/admin?admin_id={{ admin_id }}&days=7" class="filter-btn {% if selected_days == 7 %}active{% endif %}">۷ روز</a>
+        <a href="/admin?admin_id={{ admin_id }}&days=1" class="filter-btn {% if selected_days == 1 %}active{% endif %}">امروز</a>
       </div>
     </header>
 

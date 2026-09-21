@@ -53,7 +53,7 @@ async def admin_dashboard(
     analytics = AnalyticsService(session)
     kpis = await analytics.get_dashboard_kpis(days=days)
     template = jinja_env.get_template("dashboard.html")
-    return template.render(kpis=kpis, selected_days=days)
+    return template.render(kpis=kpis, selected_days=days, admin_id=admin_id)
 
 
 app = FastAPI(title="SCU Schedule Generator Admin API")
