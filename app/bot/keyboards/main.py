@@ -18,11 +18,11 @@ def main_keyboard() -> ReplyKeyboardMarkup:
     """Main reply keyboard shown after /start."""
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📄 ساخت برنامه از Excel")],
-            [KeyboardButton(text="🌐 ورود به سامانه دانشگاه")],
+            [KeyboardButton(text="📄 ارسال تاییدیه انتخاب واحد")],
+            [KeyboardButton(text="🌐 ورود به سامانه دانشگاه (به‌زودی)")],
             [
-                KeyboardButton(text="ℹ️ راهنما"),
-                KeyboardButton(text="📤 معرفی ربات"),
+                KeyboardButton(text="📖 راهنمای دریافت فایل"),
+                KeyboardButton(text="🎁 معرفی به دوستان"),
             ],
         ],
         resize_keyboard=True,
@@ -45,9 +45,8 @@ def result_inline_keyboard(
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="📤 معرفی ربات", url=share_url),
+                InlineKeyboardButton(text="📤 ارسال به دوستان", url=share_url),
                 InlineKeyboardButton(text="🔄 ساخت مجدد", callback_data="rebuild"),
-                InlineKeyboardButton(text="📥 دریافت HTML", callback_data="get_html"),
             ]
         ]
     )

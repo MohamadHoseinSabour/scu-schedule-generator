@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 from aiogram import F, Router
@@ -10,15 +11,15 @@ from aiogram.types import BufferedInputFile, Message
 
 from app.bot.keyboards.main import result_inline_keyboard
 from app.bot.messages.texts import (
+    CONFLICT_WARNING,
     ERROR_MESSAGE,
     FUN_COMPLETION,
-    INVALID_FILE_MESSAGE,
     PROCESSING_BUILDING,
     PROCESSING_CHECKING,
+    PROCESSING_DONE,
     PROCESSING_IMAGE,
     PROCESSING_RECEIVED,
     SUCCESS_TEMPLATE,
-    CONFLICT_WARNING,
 )
 from app.render.html_renderer import HTMLRenderer
 from app.services.conversion_service import ConversionService
@@ -32,7 +33,7 @@ _file_service = FileService()
 
 @router.message(F.document)
 async def handle_document(message: Message) -> None:
-    """Process an uploaded Excel report file."""
+    """Process an uploaded confirmation Excel file."""
     doc = message.document
     if doc is None:
         return
@@ -52,6 +53,7 @@ async def handle_document(message: Message) -> None:
     # 2. Send first progress message
     progress_msg = await message.answer(PROCESSING_RECEIVED)
 
+    temp_path: Path | None = None
     try:
         # 3. Download file from Telegram
         bot = message.bot
@@ -61,7 +63,7 @@ async def handle_document(message: Message) -> None:
         # 4. Save to temp
         temp_dir = Path("storage/temp")
         temp_path = await _file_service.save_temp(
-            file_data.read(), doc.file_name or "report.xls", temp_dir
+            file_data.read(), doc.file_name or "weekly_schedule.xls", temp_dir
         )
 
         # 5. Update progress
@@ -69,15 +71,13 @@ async def handle_document(message: Message) -> None:
 
         # 6. Run conversion pipeline
         html_renderer = HTMLRenderer()
-        # Try to use image renderer if Playwright is available
         image_renderer = None
         try:
             from app.render.image_renderer import ImageRenderer
             image_renderer = ImageRenderer()
         except ImportError:
-            logger.warning("Playwright not available, skipping image generation")
+            logger.warning("Playwright not available, skipping server image generation")
 
-        import os
         bot_username = os.getenv("BOT_USERNAME", "")
 
         conversion_service = ConversionService(
@@ -90,39 +90,46 @@ async def handle_document(message: Message) -> None:
         await progress_msg.edit_text(PROCESSING_BUILDING)
         result = await conversion_service.convert(temp_path)
 
-        if result.error:
+        if result.error or not result.report:
             logger.error("Conversion error for user %s: %s", user_id, result.error)
             await progress_msg.edit_text(ERROR_MESSAGE)
             return
 
-        # 7. Build success summary
+        # 7. Build summary text
         report = result.report
         summary = SUCCESS_TEMPLATE.format(
             total_courses=report.total_courses,
             total_units=int(report.total_units),
         )
         if result.has_conflicts:
-            summary += "\n" + CONFLICT_WARNING
+            summary += "\n\n" + CONFLICT_WARNING
 
-        await progress_msg.edit_text(summary)
+        # 8. Send outputs
+        await progress_msg.edit_text(PROCESSING_DONE)
 
-        # 8. Send HTML as document
+        # Send HTML document
         if result.html_path and result.html_path.exists():
             html_bytes = result.html_path.read_bytes()
             await message.answer_document(
-                BufferedInputFile(html_bytes, filename="program_haftagi.html"),
+                BufferedInputFile(html_bytes, filename="barname_haftegi.html"),
+                caption="🌐 <b>نسخه کامل و تعاملی برنامه هفتگی (HTML)</b>\n<i>این فایل رو می‌تونی با هر مرورگری توی گوشی یا کامپیوتر باز کنی.</i>",
             )
 
-        # 9. Send image as photo (if available)
+        # Send Image photo
         if result.image_path and result.image_path.exists():
-            await progress_msg.edit_text(PROCESSING_IMAGE)
             img_bytes = result.image_path.read_bytes()
             await message.answer_photo(
-                BufferedInputFile(img_bytes, filename="program_haftagi.png"),
+                BufferedInputFile(img_bytes, filename="barname_haftegi.png"),
+                caption=summary,
+                reply_markup=result_inline_keyboard(bot_username),
+            )
+        else:
+            await message.answer(
+                summary,
                 reply_markup=result_inline_keyboard(bot_username),
             )
 
-        # 10. Fun completion message
+        # 9. Send fun completion note
         await message.answer(FUN_COMPLETION)
 
         logger.info(
@@ -137,6 +144,6 @@ async def handle_document(message: Message) -> None:
         except Exception:
             pass
     finally:
-        # 11. Cleanup temp
-        if "temp_path" in locals() and temp_path.exists():
+        # 10. Cleanup temporary file
+        if temp_path and temp_path.exists():
             temp_path.unlink(missing_ok=True)

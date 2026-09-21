@@ -40,19 +40,19 @@ class FileService:
         if ext not in ALLOWED_EXTENSIONS:
             return (
                 False,
-                "❌ این فایل قابل پردازش نیست.\n\n"
-                "لطفاً فایل Report اصلی دانشگاه رو با فرمت Excel ارسال کن.",
+                "⚠️ <b>فرمت فایل ارسالی نامعتبر است!</b>\n\n"
+                "لطفاً فایل اکسل <b>تاییدیه انتخاب واحد</b> را ارسال کنید (با پسوند <code>.xls</code> یا <code>.xlsx</code>).",
             )
 
         max_bytes = max_size_mb * 1024 * 1024
         if file_size > max_bytes:
             return (
                 False,
-                f"❌ حجم فایل بیش از حد مجاز ({max_size_mb}MB) است.",
+                f"❌ <b>حجم فایل بیش از حد مجاز است!</b> (حداکثر {max_size_mb} مگابایت)",
             )
 
         if file_size == 0:
-            return False, "❌ فایل خالی است."
+            return False, "❌ <b>فایل ارسالی خالی است!</b>"
 
         return True, ""
 
