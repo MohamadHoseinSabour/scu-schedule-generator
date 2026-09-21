@@ -70,5 +70,23 @@ async def get_html_legacy_callback(callback: CallbackQuery) -> None:
 async def share_callback(callback: CallbackQuery) -> None:
     """Handle the 'share' button press (analytics tracking)."""
     await callback.answer()
-    user_id = callback.from_user.id if callback.from_user else 0
-    logger.info("Share button clicked by user %s", user_id)
+    user = callback.from_user
+    if not user:
+        return
+
+    logger.info("Share button clicked by user %s", user.id)
+    try:
+        from app.db.session import get_session_factory
+        from app.services.share_service import ShareService
+
+        session_factory = get_session_factory()
+        async with session_factory() as session:
+            share_service = ShareService(session)
+            db_user = await share_service.get_or_create_user(
+                telegram_id=user.id,
+                username=user.username,
+                first_name=user.first_name,
+            )
+            await share_service.track_share_click(db_user.id)
+    except Exception:
+        logger.exception("Failed to record share event for user %s", user.id)

@@ -14,6 +14,32 @@ from app.domain.models import (
     StudentInfo,
     WeekDay,
 )
+from app.db.session import Base, set_engine
+from sqlalchemy.ext.asyncio import create_async_engine
+
+
+import asyncio
+
+
+@pytest.fixture(autouse=True)
+def isolate_database_for_tests(tmp_path: Path):
+    """Ensure tests run against an isolated temporary SQLite database."""
+    test_db_file = tmp_path / "test_suite.db"
+    test_engine = create_async_engine(f"sqlite+aiosqlite:///{test_db_file}", echo=False)
+    set_engine(test_engine)
+
+    async def _init_db():
+        async with test_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    asyncio.run(_init_db())
+    yield
+
+    async def _dispose_db():
+        await test_engine.dispose()
+
+    asyncio.run(_dispose_db())
+    set_engine(None)
 
 
 @pytest.fixture

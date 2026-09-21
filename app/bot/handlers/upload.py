@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime
 from pathlib import Path
 
 from aiogram import F, Router
@@ -21,9 +22,12 @@ from app.bot.messages.texts import (
     PROCESSING_RECEIVED,
     SUCCESS_TEMPLATE,
 )
+from app.db.models import GeneratedOutput, Job, UploadedFile
+from app.db.session import get_session_factory
 from app.render.html_renderer import HTMLRenderer
 from app.services.conversion_service import ConversionService
 from app.services.file_service import FileService
+from app.services.share_service import ShareService
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -90,12 +94,68 @@ async def handle_document(message: Message) -> None:
         await progress_msg.edit_text(PROCESSING_BUILDING)
         result = await conversion_service.convert(temp_path)
 
+        # 7. Record job & files in database
+        referral_code = ""
+        try:
+            session_factory = get_session_factory()
+            async with session_factory() as session:
+                share_service = ShareService(session)
+                db_user = await share_service.get_or_create_user(
+                    telegram_id=user_id,
+                    username=user.username if user else None,
+                    first_name=user.first_name if user else None,
+                )
+                referral_code = db_user.referral_code
+
+                status_str = "success" if (not result.error and result.report) else "failed"
+                job = Job(
+                    id=result.job_id,
+                    user_id=db_user.id,
+                    status=status_str,
+                    source_type="upload",
+                    file_name=doc.file_name,
+                    file_type=Path(doc.file_name or "").suffix.lstrip(".").lower() or "xls",
+                    completed_at=datetime.utcnow(),
+                    processing_time=result.processing_time,
+                    error_message=result.error,
+                )
+                session.add(job)
+                await session.flush()
+
+                # Record uploaded file
+                file_hash = await _file_service.compute_hash(temp_path) if temp_path and temp_path.exists() else ""
+                uploaded_file_rec = UploadedFile(
+                    job_id=job.id,
+                    sha256=file_hash,
+                    original_name=doc.file_name or "weekly_schedule.xls",
+                    extension=Path(doc.file_name or "").suffix.lower() or ".xls",
+                    size=doc.file_size or 0,
+                )
+                session.add(uploaded_file_rec)
+
+                # Record generated output
+                if result.report:
+                    has_html = result.html_path is not None and result.html_path.exists()
+                    has_img = result.image_path is not None and result.image_path.exists()
+                    output_rec = GeneratedOutput(
+                        job_id=job.id,
+                        html_generated=has_html,
+                        image_generated=has_img,
+                        html_path=str(result.html_path) if has_html else None,
+                        image_path=str(result.image_path) if has_img else None,
+                    )
+                    session.add(output_rec)
+
+                await session.commit()
+        except Exception:
+            logger.exception("Failed to record job metrics in database for user %s", user_id)
+
         if result.error or not result.report:
             logger.error("Conversion error for user %s: %s", user_id, result.error)
             await progress_msg.edit_text(ERROR_MESSAGE)
             return
 
-        # 7. Build summary text
+        # 8. Build summary text
         report = result.report
         summary = SUCCESS_TEMPLATE.format(
             total_courses=report.total_courses,
@@ -104,7 +164,7 @@ async def handle_document(message: Message) -> None:
         if result.has_conflicts:
             summary += "\n\n" + CONFLICT_WARNING
 
-        # 8. Send outputs
+        # 9. Send outputs
         await progress_msg.edit_text(PROCESSING_DONE)
 
         html_stem = result.html_path.stem if result.html_path and result.html_path.exists() else ""
@@ -115,15 +175,15 @@ async def handle_document(message: Message) -> None:
             await message.answer_photo(
                 BufferedInputFile(img_bytes, filename="barname_haftegi.png"),
                 caption=summary,
-                reply_markup=result_inline_keyboard(bot_username, html_stem=html_stem),
+                reply_markup=result_inline_keyboard(bot_username, referral_code=referral_code, html_stem=html_stem),
             )
         else:
             await message.answer(
                 summary,
-                reply_markup=result_inline_keyboard(bot_username, html_stem=html_stem),
+                reply_markup=result_inline_keyboard(bot_username, referral_code=referral_code, html_stem=html_stem),
             )
 
-        # 9. Send fun completion note
+        # 10. Send fun completion note
         await message.answer(FUN_COMPLETION)
 
         logger.info(
@@ -138,6 +198,6 @@ async def handle_document(message: Message) -> None:
         except Exception:
             pass
     finally:
-        # 10. Cleanup temporary file
+        # 11. Cleanup temporary file
         if temp_path and temp_path.exists():
             temp_path.unlink(missing_ok=True)

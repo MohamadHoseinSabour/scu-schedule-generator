@@ -36,6 +36,13 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
+def set_engine(engine: AsyncEngine | None) -> None:
+    """Set or reset the global engine and session factory (useful for isolated tests)."""
+    global _engine, _session_factory
+    _engine = engine
+    _session_factory = None
+
+
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
     """Get or create the global async session factory."""
     global _session_factory
